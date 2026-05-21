@@ -1,5 +1,5 @@
-use forge_core::WorkflowEngine;
 use anyhow::Result;
+use forge_core::WorkflowEngine;
 
 pub async fn execute(config_path: &str) -> Result<()> {
     tracing::info!(config = %config_path, "Starting workflow");
@@ -16,9 +16,7 @@ pub async fn execute(config_path: &str) -> Result<()> {
         .await?;
 
     engine
-        .execute_phase("exec", || async {
-            Ok("Tasks executed (mock)".to_string())
-        })
+        .execute_phase("exec", || async { Ok("Tasks executed (mock)".to_string()) })
         .await?;
 
     engine
@@ -28,8 +26,13 @@ pub async fn execute(config_path: &str) -> Result<()> {
         .await?;
 
     let session = engine.finish();
-    println!("✅ Workflow complete: {}/{} phases", 
-        session.phases.iter().filter(|p| matches!(p.status, forge_core::PhaseStatus::Completed)).count(),
+    println!(
+        "✅ Workflow complete: {}/{} phases",
+        session
+            .phases
+            .iter()
+            .filter(|p| matches!(p.status, forge_core::PhaseStatus::Completed))
+            .count(),
         session.phases.len()
     );
     Ok(())

@@ -1,5 +1,5 @@
-use crate::model::{Phase, PhaseStatus, Session};
 use crate::error::ForgeResult;
+use crate::model::{Phase, PhaseStatus, Session};
 use tracing::{debug, info};
 
 /// Executes a sequence of phases in order, collecting timing and status.
@@ -35,11 +35,7 @@ impl WorkflowEngine {
     }
 
     /// Execute a single phase with the given closure.
-    pub async fn execute_phase<F, Fut>(
-        &mut self,
-        key: &str,
-        mut f: F,
-    ) -> ForgeResult<()>
+    pub async fn execute_phase<F, Fut>(&mut self, key: &str, mut f: F) -> ForgeResult<()>
     where
         F: FnMut() -> Fut,
         Fut: std::future::Future<Output = ForgeResult<String>>,
@@ -60,7 +56,11 @@ impl WorkflowEngine {
                 phase.status = PhaseStatus::Completed;
                 phase.elapsed_ms = Some(start.elapsed().as_millis() as u64);
                 phase.detail = Some(detail);
-                info!(phase = key, elapsed_ms = phase.elapsed_ms, "Phase completed");
+                info!(
+                    phase = key,
+                    elapsed_ms = phase.elapsed_ms,
+                    "Phase completed"
+                );
             }
             Err(e) => {
                 phase.status = PhaseStatus::Failed;
@@ -101,9 +101,7 @@ mod tests {
         engine.add_phase("run", "Execute");
 
         engine
-            .execute_phase("init", || async {
-                Ok("initialized".to_string())
-            })
+            .execute_phase("init", || async { Ok("initialized".to_string()) })
             .await
             .unwrap();
 
@@ -117,9 +115,7 @@ mod tests {
     async fn test_phase_not_found() {
         let mut engine = WorkflowEngine::new("test".into());
         let result = engine
-            .execute_phase("nonexistent", || async {
-                Ok("nope".to_string())
-            })
+            .execute_phase("nonexistent", || async { Ok("nope".to_string()) })
             .await;
         assert!(result.is_err());
     }
